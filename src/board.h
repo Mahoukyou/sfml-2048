@@ -13,6 +13,20 @@
 class Board : public sf::Drawable, public sf::Transformable
 {
 public:
+	enum class e_direction
+	{
+		NORTH,
+		SOUTH,
+		WEST,
+		EAST
+	};
+
+	enum class e_axis
+	{
+		vertical,
+		horizontal
+	};
+	
 	Board(const sf::Vector2u& size, const sf::Vector2f& render_size);
 	~Board() = default;
 
@@ -22,6 +36,8 @@ public:
 
 	bool spawn_new_tile();
 	[[nodiscard]] std::vector<size_t> get_empty_tiles();
+
+	bool move(e_direction direction);
 	
 protected:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
@@ -31,7 +47,9 @@ protected:
 	[[nodiscard]] sf::Vector2f get_tile_size(const sf::Vector2f& render_size) const noexcept;
 	[[nodiscard]] sf::Vector2f get_tile_position(unsigned x, unsigned y) const noexcept;
 	[[nodiscard]] size_t xy_to_index(unsigned x, unsigned y) const noexcept;
-	
+
+	bool merge_tiles(e_axis axis);
+	bool move_tiles(e_direction direction);
 private:
 	sf::Vector2u size_;
 	std::vector<unsigned> board_;

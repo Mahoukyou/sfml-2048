@@ -26,7 +26,7 @@ void Game::main_loop()
 				window_->close();
 			}
 
-			if(current_scene())
+			if (current_scene())
 			{
 				current_scene_->process_event(event);
 			}

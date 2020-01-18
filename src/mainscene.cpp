@@ -18,10 +18,44 @@ MainScene::MainScene() :
 	
 	board_.spawn_new_tile();
 	board_.spawn_new_tile();
+	//
+	//board_.spawn_new_tile();
+	//board_.spawn_new_tile();
+	//
+	//board_.spawn_new_tile();
+	//board_.spawn_new_tile();
+	//
+	//board_.spawn_new_tile();
+	//board_.spawn_new_tile();
+	//
+	//board_.spawn_new_tile();
+	//board_.spawn_new_tile();
 }
 
 void MainScene::process_event(const sf::Event& event)
 {
+	// todo ,move it into pudate, just handle the input here
+
+	bool moved = false;
+	if(event.type == sf::Event::KeyPressed)
+	{
+		switch (event.key.code)
+		{
+		case sf::Keyboard::W:
+			moved = board_.move(Board::e_direction::NORTH);
+			break;
+		case sf::Keyboard::S:
+			moved = board_.move(Board::e_direction::SOUTH);
+			break;
+			
+		default:;
+		}
+	}
+
+	if(moved)
+	{
+		board_.spawn_new_tile();
+	}
 }
 
 void MainScene::update(const float delta_time)
