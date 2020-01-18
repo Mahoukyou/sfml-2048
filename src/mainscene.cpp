@@ -5,7 +5,8 @@
 MainScene::MainScene() :
 	board_{ {4, 4 }, {600, 600} }
 {
-	
+	board_.spawn_new_tile();
+	board_.spawn_new_tile();
 }
 
 void MainScene::process_event(const sf::Event& event)
