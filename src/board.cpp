@@ -1,5 +1,6 @@
 #include "board.h"
 
+#include "resourcemanager.h"
 #include "SFML/Graphics.hpp"
 #include <stdexcept>
 #include <random>
@@ -7,7 +8,7 @@
 Board::Board(const sf::Vector2u& size, const sf::Vector2f& render_size) :
 	size_{ size }
 {
-	if(size.x < 2 || size.y < 2)
+	if (size.x < 2 || size.y < 2)
 	{
 		// todo, custom exception (passing the invalid size)
 		throw std::invalid_argument{ "Board size is not valid" };
@@ -46,7 +47,7 @@ bool Board::spawn_new_tile()
 	// todo, rename the empty tiles here or the background oens (since it is confusing)
 	std::vector<size_t> empty_tiles{ get_empty_tiles() };
 
-	if(empty_tiles.empty())
+	if (empty_tiles.empty())
 	{
 		return false;
 	}
@@ -58,7 +59,7 @@ bool Board::spawn_new_tile()
 	const auto random_empty_tile = empty_tiles[tile_position_dist(gen)];
 
 	const std::uniform_int_distribution<> tile_value_dist{ 1, 2 };
-	const unsigned new_tile_value = tile_value_dist(gen) * 2; // 2 or 4
+	const unsigned new_tile_value = tile_value_dist(gen) * 2;
 
 	// todo, spawn tile
 	board_[random_empty_tile] = new_tile_value;
@@ -68,11 +69,12 @@ bool Board::spawn_new_tile()
 
 std::vector<size_t> Board::get_empty_tiles()
 {
+	// We could reserve space in the vector,
+	// but <20 size_t's and the board is usually gonna be halfway full so gonna levve it as it is
 	std::vector<size_t> empty_tiles;
-
-	for(size_t i = 0; i < board_.size(); ++i)
+	for (size_t i = 0; i < board_.size(); ++i)
 	{
-		if(board_[i] == 0)
+		if (board_[i] == 0)
 		{
 			empty_tiles.push_back(i);
 		}
@@ -86,21 +88,15 @@ void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	states.transform *= getTransform();
 	target.draw(background_, states);
 
-	for(const auto& tile : empty_tiles_)
+	for (const auto& tile : empty_tiles_)
 	{
 		target.draw(tile, states);
 	}
 
 
 
-	// JUST TEST UNTIL WE FINISH TILE SPRITES 
-	/// TODO OOOOOOOOOOOOOOOOOOOOOO (loading fonts every draw call :D)
-	sf::Font font;
-	// Load it from a file
-	if (!font.loadFromFile(R"(C:\Users\Dawid Wdowiak\Desktop\deadpack! DEMO.ttf)"));
-
-	sf::Text t{};
-	t.setFont(font);
+	// todo, test
+	sf::Sprite tile_sprite{};
 	for (unsigned x = 0; x < size().x; ++x)
 	{
 		for (unsigned y = 0; y < size().y; ++y)
@@ -108,15 +104,11 @@ void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 			const unsigned tile = board_[xy_to_index(x, y)];
 			if (tile != 0)
 			{
-				t.setString(std::to_string(tile));
-				t.setPosition(get_tile_position(x, y));
-				t.setCharacterSize(72);
-				target.draw(t);
-
-
-				/*sf::RectangleShape r{ tile_size_ };
-				r.setPosition(get_tile_position(x, y));
-				target.draw(r);*/
+				tile_sprite.setTexture(*ResourceManager::instance().get_texture(std::to_string(tile)));
+				tile_sprite.setPosition(get_tile_position(x, y));
+				const auto size = tile_sprite.getTexture()->getSize();
+				tile_sprite.setScale(tile_size_.x / size.x, tile_size_.y / size.y);
+				target.draw(tile_sprite);
 			}
 		}
 	}
@@ -133,7 +125,7 @@ void Board::init_background_tiles()
 
 sf::Vector2f Board::get_tile_size(const sf::Vector2f& render_size) const noexcept
 {
-	const sf::Vector2f total_padding = {size().x * tile_padding_, size().y * tile_padding_};
+	const sf::Vector2f total_padding{ size().x * tile_padding_, size().y * tile_padding_ };
 	const auto useful_area = render_size - total_padding;
 
 	return { useful_area.x / size().x, useful_area.y / size().y };
