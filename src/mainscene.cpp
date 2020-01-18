@@ -3,7 +3,7 @@
 #include <SFML/Graphics.hpp>
 
 MainScene::MainScene() :
-	board_{ {4, 4 } }
+	board_{ {4, 4 }, {600, 600} }
 {
 	
 }
@@ -20,8 +20,6 @@ void MainScene::update(const float delta_time)
 void MainScene::render(sf::RenderWindow& target)
 {
 	target.clear();
-
 	target.draw(board_);
-	
 	target.display();
 }

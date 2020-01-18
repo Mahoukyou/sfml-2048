@@ -10,22 +10,22 @@
 
 
 
-class Board : public sf::Drawable
+class Board : public sf::Drawable, public sf::Transformable
 {
 public:
-	Board(const sf::Vector2u& size);
+	Board(const sf::Vector2u& size, const sf::Vector2f& render_size);
 	~Board() = default;
 
 	[[nodiscard]] const sf::Vector2u& size() const noexcept;
+
+	void set_render_size(const sf::Vector2f& render_size);
 	
 protected:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	void setup_background_tiles();
-	// todo, public (pass render size of the board)
-	void set_render_size();
-	[[nodiscard]] sf::Vector2f get_tile_size() const noexcept;
+	void init_background_tiles();
 
+	[[nodiscard]] sf::Vector2f get_tile_size(const sf::Vector2f& render_size) const noexcept;
 	size_t xy_to_index(unsigned x, unsigned y) const noexcept;
 	
 private:
@@ -35,7 +35,4 @@ private:
 	float tile_padding_{ 10 };
 	sf::RectangleShape background_;
 	std::vector<sf::RectangleShape> empty_tiles_;
-
-	// todo, use window size?
-	sf::Vector2f render_size_{ 600, 600 };
 };

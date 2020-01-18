@@ -3,7 +3,7 @@
 #include "SFML/Graphics.hpp"
 #include <stdexcept>
 
-Board::Board(const sf::Vector2u& size) :
+Board::Board(const sf::Vector2u& size, const sf::Vector2f& render_size) :
 	size_{ size }
 {
 	if(size.x < 2 || size.y < 2)
@@ -12,7 +12,8 @@ Board::Board(const sf::Vector2u& size) :
 		throw std::invalid_argument{ "Board size is not valid" };
 	}
 
-	setup_background_tiles();
+	init_background_tiles();
+	set_render_size(render_size);
 }
 
 const sf::Vector2u& Board::size() const noexcept
@@ -20,34 +21,11 @@ const sf::Vector2u& Board::size() const noexcept
 	return size_;
 }
 
-void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
+void Board::set_render_size(const sf::Vector2f& render_size)
 {
-	target.draw(background_);
+	background_.setSize(render_size);
 
-	for(const auto& tile : empty_tiles_)
-	{
-		target.draw(tile);
-	}
-}
-
-void Board::setup_background_tiles()
-{
-	background_.setFillColor(sf::Color{ 189, 174, 136 });
-
-	sf::RectangleShape tile;
-	tile.setFillColor(sf::Color{ 232, 212, 160 });
-	empty_tiles_.resize(size().x * size().y, tile);
-
-	set_render_size(); // todo, do (recalculate/resize background) instead of set render size
-}
-
-void Board::set_render_size()
-{
-	//render_size_ = ... todo, for now its static
-
-	background_.setSize(render_size_);
-	
-	const auto tile_size = get_tile_size();
+	const auto tile_size = get_tile_size(render_size);
 	for (unsigned x = 0; x < size().x; ++x)
 	{
 		for (unsigned y = 0; y < size().y; ++y)
@@ -62,11 +40,30 @@ void Board::set_render_size()
 	}
 }
 
-sf::Vector2f Board::get_tile_size() const noexcept
+void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-	
+	states.transform *= getTransform();
+	target.draw(background_, states);
+
+	for(const auto& tile : empty_tiles_)
+	{
+		target.draw(tile, states);
+	}
+}
+
+void Board::init_background_tiles()
+{
+	background_.setFillColor(sf::Color{ 189, 174, 136 });
+
+	sf::RectangleShape tile;
+	tile.setFillColor(sf::Color{ 232, 212, 160 });
+	empty_tiles_.resize(size().x * size().y, tile);
+}
+
+sf::Vector2f Board::get_tile_size(const sf::Vector2f& render_size) const noexcept
+{
 	const sf::Vector2f total_padding = {size().x * tile_padding_, size().y * tile_padding_};
-	const auto useful_area = render_size_ - total_padding;
+	const auto useful_area = render_size - total_padding;
 
 	return { useful_area.x / size().x, useful_area.y / size().y };
 }
