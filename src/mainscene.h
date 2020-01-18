@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene.h"
+#include "board.h"
 
 class MainScene : public IScene
 {
@@ -13,4 +14,6 @@ public:
 	void render(sf::RenderWindow& target) override;
 	
 private:
+	Board board_;
+
 };

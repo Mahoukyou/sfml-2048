@@ -13,6 +13,8 @@ set(
 	scene.cpp
 	mainscene.h
 	mainscene.cpp
+	board.h
+	board.cpp
 )
 add_executable(sfml-2048 ${2048_srcs})
 target_link_libraries(sfml-2048 PRIVATE sfml-graphics sfml-window)
