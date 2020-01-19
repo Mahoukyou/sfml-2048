@@ -4,7 +4,10 @@
 #include "SFML/Graphics.hpp"
 #include <stdexcept>
 #include <random>
+#include <optional>
 
+
+// TODO, make the size a single value, since it's always gonna be x by x
 Board::Board(const sf::Vector2u& size, const sf::Vector2f& render_size) :
 	size_{ size }
 {
@@ -151,135 +154,112 @@ size_t Board::xy_to_index(const unsigned x, const unsigned y) const noexcept
 	return y * size().x + x;
 }
 
+std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(const e_direction direction)
+{
+	std::vector<size_t> x_vec, y_vec;
+	x_vec.reserve(size().x);
+	y_vec.reserve(size().y);
+	for(size_t x = 0; x < size().x; ++x)
+	{
+		x_vec.push_back(x);
+	}
+
+	for (size_t y = 0; y < size().y; ++y)
+	{
+		y_vec.push_back(y);
+	}
+
+	// todo, move to difeerent function (since we are using the same vectors in getnexttpos)
+	const std::map<e_direction, sf::Vector2<int>> direction_vectors
+	{
+			{e_direction::NORTH, {0, 1}},
+			{e_direction::SOUTH, {0, -1}},
+			{e_direction::WEST, {1, 0}},
+			{e_direction::EAST, {-1, 0}}
+	};
+	const auto direction_vector = direction_vectors.find(direction)->second;
+	if(direction_vector.x == -1)
+	{
+		std::reverse(x_vec.begin(), x_vec.end());
+	}
+
+	if (direction_vector.y == -1)
+	{
+		std::reverse(y_vec.begin(), y_vec.end());
+	}
+
+	return std::make_pair(std::move(x_vec), std::move(y_vec));
+}
+
 bool Board::merge_tiles(const e_direction direction)
 {
 	bool any_merged{ false };
-	// todo,can we make one universal func instead of copy-paste?
 
-	switch (direction)
+
+	// TODO, FIX TYPES, SINCE TYPE MISMATCH IS ALL OVER THE PLACE
+	const auto get_next_position = [&](int x, int y) -> std::optional<std::pair<size_t, size_t>>
 	{
-	case e_direction::NORTH:
-		for (unsigned x = 0; x < size().y; ++x)
+		// TODO, MMAKE A SINGLE GET DIRECTION VECTOR FUNC
+		const std::map<e_direction, sf::Vector2<int>> direction_vectors
 		{
-			for (unsigned y_begin = 0; y_begin < size().x; ++y_begin)
+			{e_direction::NORTH, {0, 1}},
+			{e_direction::SOUTH, {0, -1}},
+			{e_direction::WEST, {1, 0}},
+			{e_direction::EAST, {-1, 0}}
+		};
+		const auto direction_vector = direction_vectors.find(direction)->second;
+
+		x += direction_vector.x;
+		y += direction_vector.y;
+
+		if (x < 0 || y < 0 || x >= size().x || y >= size().y)
+		{
+			return std::nullopt;
+		}
+
+		return std::make_pair(x, y);
+
+	};
+
+	const auto is_empty = [&](std::pair<size_t, size_t> t)
+	{
+		const auto [x, y] = t;
+		return board_[xy_to_index(x, y)] == 0;
+	};
+	
+	const auto [x_vector, y_vector] = get_sequence_vectors(direction);
+	for (const auto x : x_vector)
+	{
+		for (const auto y : y_vector)
+		{
+			// todo, cehck for max value!
+			if (board_[xy_to_index(x, y)] == 0)
 			{
-				// todo, max value for as well
-				if (board_[xy_to_index(x, y_begin)] == 0)
-				{
-					continue;
-				}
+				continue;
+			}
+			
+			auto next_not_empty_position = get_next_position(x, y);
+			while (next_not_empty_position &&
+				is_empty(next_not_empty_position.value()))
+			{
+				const auto [next_x, next_y] = next_not_empty_position.value();
+				next_not_empty_position = get_next_position(next_x, next_y);
+			} 
 
-				for (unsigned y = y_begin + 1; y < size().x; ++y)
-				{
-					if (board_[xy_to_index(x, y_begin)] == board_[xy_to_index(x, y)])
-					{
-						board_[xy_to_index(x, y_begin)] *= 2; // todo, max value
-						board_[xy_to_index(x, y)] *= 0;
+			if (!next_not_empty_position || is_empty(next_not_empty_position.value()))
+			{
+				continue;
+			}
 
-						any_merged = true;
-						++y_begin;
-					}
-					else if (board_[xy_to_index(x, y)] != 0)
-					{
-						break;
-					}
-				}
+			const auto [next_x, next_y] = next_not_empty_position.value();
+			if (board_[xy_to_index(x, y)] == board_[xy_to_index(next_x, next_y)])
+			{
+				board_[xy_to_index(x, y)] *= 2;
+				board_[xy_to_index(next_x, next_y)] = 0;
+
+				any_merged = true;
 			}
 		}
-		break;
-		
-	case e_direction::SOUTH:
-		for (unsigned x = 0; x < size().x; ++x)
-		{
-			for (int y_begin = size().y - 1; y_begin >= 0; --y_begin)
-			{
-				// todo, max value for as well
-				if (board_[xy_to_index(x, y_begin)] == 0)
-				{
-					continue;
-				}
-
-				for (int y = y_begin - 1; y >= 0; --y)
-				{
-					if (board_[xy_to_index(x, y_begin)] == board_[xy_to_index(x, y)])
-					{
-						board_[xy_to_index(x, y_begin)] *= 2; // todo, max value
-						board_[xy_to_index(x, y)] *= 0;
-
-						any_merged = true;
-						--y_begin;
-					}
-					else if (board_[xy_to_index(x, y)] != 0)
-					{
-						break;
-					}
-				}
-			}
-		}
-		break;
-
-	case e_direction::WEST:
-		for (unsigned y = 0; y < size().y; ++y)
-		{
-			for (unsigned x_begin = 0; x_begin < size().x; ++x_begin)
-			{
-				// todo, max value for as well
-				if (board_[xy_to_index(x_begin, y)] == 0)
-				{
-					continue;
-				}
-
-				for (unsigned x = x_begin + 1; x < size().x; ++x)
-				{
-					if (board_[xy_to_index(x_begin, y)] == board_[xy_to_index(x, y)])
-					{
-						board_[xy_to_index(x_begin, y)] *= 2; // todo, max value
-						board_[xy_to_index(x, y)] *= 0;
-
-						any_merged = true;
-						++x_begin;
-					}
-					else if (board_[xy_to_index(x, y)] != 0)
-					{
-						break;
-					}
-				}
-			}
-		}
-		break;
-
-	case e_direction::EAST:
-		for (unsigned y = 0; y < size().x; ++y)
-		{
-			for (int x_begin = size().x - 1; x_begin >= 0; --x_begin)
-			{
-				// todo, max value for as well
-				if (board_[xy_to_index(x_begin, y)] == 0)
-				{
-					continue;
-				}
-
-				for (int x = x_begin - 1; x >= 0; --x)
-				{
-					if (board_[xy_to_index(x_begin, y)] == board_[xy_to_index(x, y)])
-					{
-						board_[xy_to_index(x_begin, y)] *= 2; // todo, max value
-						board_[xy_to_index(x, y)] *= 0;
-
-						any_merged = true;
-						--x_begin;
-					}
-					else if (board_[xy_to_index(x, y)] != 0)
-					{
-						break;
-					}
-				}
-			}
-		}
-		break;
-
-	default:;//todo
-		
 	}
 	
 	return any_merged;

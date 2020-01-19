@@ -48,6 +48,8 @@ protected:
 	[[nodiscard]] sf::Vector2f get_tile_position(unsigned x, unsigned y) const noexcept;
 	[[nodiscard]] size_t xy_to_index(unsigned x, unsigned y) const noexcept;
 
+	[[nodiscard]] std::pair<std::vector<size_t>, std::vector<size_t>> get_sequence_vectors(e_direction direction);
+	
 	bool merge_tiles(e_direction direction);
 	bool move_tiles(e_direction direction);
 private:
