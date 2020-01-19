@@ -48,7 +48,7 @@ protected:
 	[[nodiscard]] sf::Vector2f get_tile_position(unsigned x, unsigned y) const noexcept;
 	[[nodiscard]] size_t xy_to_index(unsigned x, unsigned y) const noexcept;
 
-	bool merge_tiles(e_axis axis);
+	bool merge_tiles(e_direction direction);
 	bool move_tiles(e_direction direction);
 private:
 	sf::Vector2u size_;

@@ -85,21 +85,7 @@ std::vector<size_t> Board::get_empty_tiles()
 
 bool Board::move(e_direction direction)
 {
-	bool merge_result{ false };
-	
-	switch(direction)
-	{
-	case e_direction::NORTH:
-		[[__fallthrough]]
-	case e_direction::SOUTH:
-		merge_result = merge_tiles(e_axis::vertical);
-
-		break;
-
-	default:
-		throw std::invalid_argument{ "Board::move(e_direction), invalid direction" };
-	}
-
+	const auto merge_result = merge_tiles(direction);
 	const auto move_result = move_tiles(direction);
 
 	return merge_result || move_result;
@@ -165,17 +151,14 @@ size_t Board::xy_to_index(const unsigned x, const unsigned y) const noexcept
 	return y * size().x + x;
 }
 
-bool Board::merge_tiles(const e_axis axis)
+bool Board::merge_tiles(const e_direction direction)
 {
 	bool any_merged{ false };
 	// todo,can we make one universal func instead of copy-paste?
 
-
-	// todo, doesn't work entirely correctly (use direction instead of orientantion)
-	// 4,4,4,2 (two possibilities, 8,4,2,0 and 0,4,8,2 -- won't work with orientation base merge
-	switch (axis)
+	switch (direction)
 	{
-	case e_axis::vertical:
+	case e_direction::NORTH:
 		for (unsigned x = 0; x < size().y; ++x)
 		{
 			for (unsigned y_begin = 0; y_begin < size().x; ++y_begin)
@@ -204,11 +187,11 @@ bool Board::merge_tiles(const e_axis axis)
 			}
 		}
 		break;
-
-	case e_axis::horizontal:
+		
+	case e_direction::SOUTH:
 		for (unsigned x = 0; x < size().x; ++x)
 		{
-			for (unsigned y_begin = 0; y_begin < size().y; ++y_begin)
+			for (int y_begin = size().y - 1; y_begin >= 0; --y_begin)
 			{
 				// todo, max value for as well
 				if (board_[xy_to_index(x, y_begin)] == 0)
@@ -216,7 +199,7 @@ bool Board::merge_tiles(const e_axis axis)
 					continue;
 				}
 
-				for (unsigned y = y_begin + 1; y < size().y; ++y)
+				for (int y = y_begin - 1; y >= 0; --y)
 				{
 					if (board_[xy_to_index(x, y_begin)] == board_[xy_to_index(x, y)])
 					{
@@ -224,7 +207,7 @@ bool Board::merge_tiles(const e_axis axis)
 						board_[xy_to_index(x, y)] *= 0;
 
 						any_merged = true;
-						++y_begin;
+						--y_begin;
 					}
 					else if (board_[xy_to_index(x, y)] != 0)
 					{
@@ -233,10 +216,72 @@ bool Board::merge_tiles(const e_axis axis)
 				}
 			}
 		}
+		break;
 
-	default:;// todo
+	case e_direction::WEST:
+		for (unsigned y = 0; y < size().y; ++y)
+		{
+			for (unsigned x_begin = 0; x_begin < size().x; ++x_begin)
+			{
+				// todo, max value for as well
+				if (board_[xy_to_index(x_begin, y)] == 0)
+				{
+					continue;
+				}
+
+				for (unsigned x = x_begin + 1; x < size().x; ++x)
+				{
+					if (board_[xy_to_index(x_begin, y)] == board_[xy_to_index(x, y)])
+					{
+						board_[xy_to_index(x_begin, y)] *= 2; // todo, max value
+						board_[xy_to_index(x, y)] *= 0;
+
+						any_merged = true;
+						++x_begin;
+					}
+					else if (board_[xy_to_index(x, y)] != 0)
+					{
+						break;
+					}
+				}
+			}
+		}
+		break;
+
+	case e_direction::EAST:
+		for (unsigned y = 0; y < size().x; ++y)
+		{
+			for (int x_begin = size().x - 1; x_begin >= 0; --x_begin)
+			{
+				// todo, max value for as well
+				if (board_[xy_to_index(x_begin, y)] == 0)
+				{
+					continue;
+				}
+
+				for (int x = x_begin - 1; x >= 0; --x)
+				{
+					if (board_[xy_to_index(x_begin, y)] == board_[xy_to_index(x, y)])
+					{
+						board_[xy_to_index(x_begin, y)] *= 2; // todo, max value
+						board_[xy_to_index(x, y)] *= 0;
+
+						any_merged = true;
+						--x_begin;
+					}
+					else if (board_[xy_to_index(x, y)] != 0)
+					{
+						break;
+					}
+				}
+			}
+		}
+		break;
+
+	default:;//todo
+		
 	}
-
+	
 	return any_merged;
 }
 
@@ -307,7 +352,7 @@ bool Board::move_tiles(e_direction direction)
 		break;
 
 	case e_direction::WEST:
-		for (unsigned y = 0; y < size().x; ++y)
+		for (unsigned y = 0; y < size().y; ++y)
 		{
 			for (unsigned x_begin = 0; x_begin < size().x; ++x_begin)
 			{
