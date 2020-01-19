@@ -5,7 +5,7 @@
 #include "SFML/Graphics.hpp"
 
 MainScene::MainScene() :
-	board_{ {4, 4 }, {600, 600} }
+	board_{ {15, 15 }, {600, 600} }
 {
 	// preload the textures atm so we won't have to deal with filenames in board
 	for(int i = 2; i <= 8192; i*=2)
@@ -46,6 +46,12 @@ void MainScene::process_event(const sf::Event& event)
 			break;
 		case sf::Keyboard::S:
 			moved = board_.move(Board::e_direction::SOUTH);
+			break;
+		case sf::Keyboard::A:
+			moved = board_.move(Board::e_direction::WEST);
+			break;
+		case sf::Keyboard::D:
+			moved = board_.move(Board::e_direction::EAST);
 			break;
 			
 		default:;

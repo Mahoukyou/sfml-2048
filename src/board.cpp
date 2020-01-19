@@ -307,8 +307,63 @@ bool Board::move_tiles(e_direction direction)
 		break;
 
 	case e_direction::WEST:
+		for (unsigned y = 0; y < size().x; ++y)
+		{
+			for (unsigned x_begin = 0; x_begin < size().x; ++x_begin)
+			{
+				if (board_[xy_to_index(x_begin, y)] != 0)
+				{
+					continue;
+				}
+
+				bool any_local_moved{ false };
+				for (unsigned x = x_begin + 1; x < size().x; ++x)
+				{
+					if (board_[xy_to_index(x, y)] != 0)
+					{
+						std::swap(board_[xy_to_index(x_begin, y)], board_[xy_to_index(x, y)]);
+						any_moved = true;
+						any_local_moved = true;
+						break;
+					}
+				}
+
+				if (!any_local_moved)
+				{
+					break;
+				}
+			}
+		}
+		break;
+		
 	case e_direction::EAST:
-		// todo
+		for (unsigned y = 0; y < size().y; ++y)
+		{
+			for (int x_begin = size().x - 1; x_begin >= 0; --x_begin)
+			{
+				if (board_[xy_to_index(x_begin, y)] != 0)
+				{
+					continue;
+				}
+
+				bool any_local_moved{ false };
+				for (int x = x_begin - 1; x >= 0; --x)
+				{
+					if (board_[xy_to_index(x, y)] != 0)
+					{
+						std::swap(board_[xy_to_index(x_begin, y)], board_[xy_to_index(x, y)]);
+						any_moved = true;
+						any_local_moved = true;
+						break;
+					}
+				}
+
+				if (!any_local_moved)
+				{
+					break;
+				}
+			}
+		}
 		break;
 
 	default:; // todo
