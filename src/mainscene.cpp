@@ -23,44 +23,45 @@ MainScene::MainScene() :
 
 void MainScene::process_event(const sf::Event& event)
 {
-	// todo ,move it into pudate, just handle the input here
-
-	bool moved = false;
 	if(event.type == sf::Event::KeyPressed)
 	{
 		switch (event.key.code)
 		{
 		case sf::Keyboard::W:
-			moved = board_.move(Board::e_direction::NORTH);
+			pending_move = Board::e_direction::NORTH;
 			break;
 		case sf::Keyboard::S:
-			moved = board_.move(Board::e_direction::SOUTH);
+			pending_move = Board::e_direction::SOUTH;
 			break;
 		case sf::Keyboard::A:
-			moved = board_.move(Board::e_direction::WEST);
+			pending_move = Board::e_direction::WEST;
 			break;
 		case sf::Keyboard::D:
-			moved = board_.move(Board::e_direction::EAST);
+			pending_move = Board::e_direction::EAST;
 			break;
 			
 		default:;
 		}
 	}
-
-	if(moved)
-	{
-		board_.spawn_new_tile();
-	}
-
-	if(!board_.any_moves_available())
-	{
-		std::cout << "END GAME, nno more moves\n";
-	}
 }
 
-void MainScene::update(const float delta_time)
+void MainScene::update(const float /*delta_time*/)
 {
+	if (pending_move)
+	{
+		const auto moved = board_.move(pending_move.value());
+		if (moved)
+		{
+			board_.spawn_new_tile();
+		}
 
+		if (!board_.any_moves_available())
+		{
+			std::cout << "END GMAE";
+		}
+		
+		pending_move = std::nullopt;
+	}
 }
 
 void MainScene::render(sf::RenderWindow& target)

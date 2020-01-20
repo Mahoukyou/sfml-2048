@@ -28,12 +28,6 @@ public:
 		EAST
 	};
 
-	enum class e_axis
-	{
-		vertical,
-		horizontal
-	};
-	
 	Board(unsigned size, const sf::Vector2f& render_size);
 	~Board() = default;
 

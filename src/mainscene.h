@@ -16,4 +16,5 @@ public:
 private:
 	Board board_;
 
+	std::optional<Board::e_direction> pending_move{ std::nullopt };
 };
