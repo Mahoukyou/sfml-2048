@@ -94,6 +94,11 @@ bool Board::move(e_direction direction)
 	return merge_result || move_result;
 }
 
+bool Board::any_moves_available() const
+{
+	return has_empty_tile() || any_merge_available();
+}
+
 void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	states.transform *= getTransform();
@@ -225,6 +230,49 @@ std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(
 	}
 
 	return std::make_pair(std::move(x_vec), std::move(y_vec));
+}
+
+bool Board::has_empty_tile() const
+{
+	return std::find(board_.begin(), board_.end(), 0) != board_.end();
+}
+
+bool Board::any_merge_available() const
+{
+	std::vector<sf::Vector2i> directions_vector;
+	directions_vector.reserve(4);
+	directions_vector.push_back(get_direction_vector(e_direction::NORTH));
+	directions_vector.push_back(get_direction_vector(e_direction::SOUTH));
+	directions_vector.push_back(get_direction_vector(e_direction::WEST));
+	directions_vector.push_back(get_direction_vector(e_direction::EAST));
+	
+	for (size_t x = 0; x < size(); ++x)
+	{
+		for (size_t y = 0; y < size(); ++y)
+		{
+			if (board_[xy_to_index(x, y)] == 0)
+			{
+				continue;
+			}
+
+			for (const auto direction : directions_vector)
+			{
+				const auto next_position = get_next_position({ static_cast<int>(x), static_cast<int>(y) }, direction);
+				if (!next_position)
+				{
+					continue;;
+				}
+
+				const auto [next_x, next_y] = next_position.value();
+				if (board_[xy_to_index(x, y)] == board_[xy_to_index(next_x, next_y)])
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
 }
 
 bool Board::merge_tiles(const sf::Vector2i direction_vector)

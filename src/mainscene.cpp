@@ -3,9 +3,10 @@
 #include "resourcemanager.h"
 
 #include "SFML/Graphics.hpp"
+#include <iostream>
 
 MainScene::MainScene() :
-	board_{ 16, {600, 600} }
+	board_{ 4, {600, 600} }
 {
 	// preload the textures atm so we won't have to deal with filenames in board
 	for(int i = 2; i <= 8192; i*=2)
@@ -18,18 +19,6 @@ MainScene::MainScene() :
 	
 	board_.spawn_new_tile();
 	board_.spawn_new_tile();
-	//
-	//board_.spawn_new_tile();
-	//board_.spawn_new_tile();
-	//
-	//board_.spawn_new_tile();
-	//board_.spawn_new_tile();
-	//
-	//board_.spawn_new_tile();
-	//board_.spawn_new_tile();
-	//
-	//board_.spawn_new_tile();
-	//board_.spawn_new_tile();
 }
 
 void MainScene::process_event(const sf::Event& event)
@@ -61,6 +50,11 @@ void MainScene::process_event(const sf::Event& event)
 	if(moved)
 	{
 		board_.spawn_new_tile();
+	}
+
+	if(!board_.any_moves_available())
+	{
+		std::cout << "END GAME, nno more moves\n";
 	}
 }
 

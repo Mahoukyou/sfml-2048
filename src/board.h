@@ -40,6 +40,7 @@ public:
 	[[nodiscard]] std::vector<size_t> get_empty_tiles();
 
 	bool move(e_direction direction);
+	[[nodiscard]] bool any_moves_available() const;
 	
 protected:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
@@ -54,6 +55,9 @@ protected:
 	[[nodiscard]] std::optional<sf::Vector2i> get_next_position(sf::Vector2i position, sf::Vector2i direction_vector) const;
 	[[nodiscard]] std::optional<sf::Vector2i> get_next_non_empty_position(sf::Vector2i position, sf::Vector2i direction_vector) const;
 	[[nodiscard]] std::pair<std::vector<size_t>, std::vector<size_t>> get_sequence_vectors(sf::Vector2i direction_vector) const;
+
+	[[nodiscard]] bool has_empty_tile() const;
+	[[nodiscard]] bool any_merge_available() const;
 	
 	bool merge_tiles(sf::Vector2i direction_vector);
 	bool move_tiles(sf::Vector2i direction_vector);
