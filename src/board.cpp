@@ -7,22 +7,22 @@
 
 
 // TODO, make the size a single value, since it's always gonna be x by x
-Board::Board(const sf::Vector2u& size, const sf::Vector2f& render_size) :
+Board::Board(const unsigned size, const sf::Vector2f& render_size) :
 	size_{ size }
 {
-	if (size.x < 2 || size.y < 2)
+	if (size < 2)
 	{
 		// todo, custom exception (passing the invalid size)
 		throw std::invalid_argument{ "Board size is not valid" };
 	}
 
-	board_.resize(size.x * size.y, 0);
+	board_.resize(size * size, 0);
 
 	init_background_tiles();
 	set_render_size(render_size);
 }
 
-const sf::Vector2u& Board::size() const noexcept
+unsigned Board::size() const noexcept
 {
 	return size_;
 }
@@ -32,9 +32,9 @@ void Board::set_render_size(const sf::Vector2f& render_size)
 	background_.setSize(render_size);
 
 	tile_size_ = get_tile_size(render_size);
-	for (unsigned x = 0; x < size().x; ++x)
+	for (unsigned x = 0; x < size(); ++x)
 	{
-		for (unsigned y = 0; y < size().y; ++y)
+		for (unsigned y = 0; y < size(); ++y)
 		{
 			const auto index = xy_to_index(x, y);
 
@@ -108,9 +108,9 @@ void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 	// todo, test
 	sf::Sprite tile_sprite{};
-	for (unsigned x = 0; x < size().x; ++x)
+	for (unsigned x = 0; x < size(); ++x)
 	{
-		for (unsigned y = 0; y < size().y; ++y)
+		for (unsigned y = 0; y < size(); ++y)
 		{
 			const unsigned tile = board_[xy_to_index(x, y)];
 			if (tile != 0)
@@ -131,15 +131,15 @@ void Board::init_background_tiles()
 
 	sf::RectangleShape tile;
 	tile.setFillColor(sf::Color{ 232, 212, 160 });
-	empty_tiles_.resize(size().x * size().y, tile);
+	empty_tiles_.resize(size() * size(), tile);
 }
 
 sf::Vector2f Board::get_tile_size(const sf::Vector2f& render_size) const noexcept
 {
-	const sf::Vector2f total_padding{ size().x * tile_padding_, size().y * tile_padding_ };
+	const sf::Vector2f total_padding{ size() * tile_padding_, size() * tile_padding_ };
 	const auto useful_area = render_size - total_padding;
 
-	return { useful_area.x / size().x, useful_area.y / size().y };
+	return { useful_area.x / size(), useful_area.y / size() };
 }
 
 sf::Vector2f Board::get_tile_position(const unsigned x, const unsigned y) const noexcept
@@ -151,7 +151,7 @@ sf::Vector2f Board::get_tile_position(const unsigned x, const unsigned y) const 
 
 size_t Board::xy_to_index(const size_t x, const size_t y) const noexcept
 {
-	return y * size().x + x;
+	return y * size() + x;
 }
 
 sf::Vector2i Board::get_direction_vector(const e_direction direction) const
@@ -174,7 +174,7 @@ std::optional<sf::Vector2i> Board::get_next_position(sf::Vector2i position, cons
 {
 	position += direction_vector;
 	if (position.x < 0 || position.y < 0 ||
-		position.x >= static_cast<int>(size().x) || position.y >= static_cast<int>(size().y))
+		position.x >= static_cast<int>(size()) || position.y >= static_cast<int>(size()))
 	{
 		return std::nullopt;
 	}
@@ -207,16 +207,12 @@ std::optional<sf::Vector2i> Board::get_next_non_empty_position(const sf::Vector2
 std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(const sf::Vector2i direction_vector) const
 {
 	std::vector<size_t> x_vec, y_vec;
-	x_vec.reserve(size().x);
-	y_vec.reserve(size().y);
-	for (size_t x = 0; x < size().x; ++x)
+	x_vec.reserve(size());
+	y_vec.reserve(size());
+	for (size_t i = 0; i < size(); ++i)
 	{
-		x_vec.push_back(x);
-	}
-
-	for (size_t y = 0; y < size().y; ++y)
-	{
-		y_vec.push_back(y);
+		x_vec.push_back(i);
+		y_vec.push_back(i);
 	}
 
 	if (direction_vector.x == -1)

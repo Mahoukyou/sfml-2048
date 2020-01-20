@@ -29,10 +29,10 @@ public:
 		horizontal
 	};
 	
-	Board(const sf::Vector2u& size, const sf::Vector2f& render_size);
+	Board(unsigned size, const sf::Vector2f& render_size);
 	~Board() = default;
 
-	[[nodiscard]] const sf::Vector2u& size() const noexcept;
+	[[nodiscard]] unsigned size() const noexcept;
 
 	void set_render_size(const sf::Vector2f& render_size);
 
@@ -58,7 +58,7 @@ protected:
 	bool merge_tiles(sf::Vector2i direction_vector);
 	bool move_tiles(sf::Vector2i direction_vector);
 private:
-	sf::Vector2u size_;
+	unsigned size_;
 	std::vector<unsigned> board_;
 
 	// TODO

@@ -5,7 +5,7 @@
 #include "SFML/Graphics.hpp"
 
 MainScene::MainScene() :
-	board_{ {15, 15 }, {600, 600} }
+	board_{ 16, {600, 600} }
 {
 	// preload the textures atm so we won't have to deal with filenames in board
 	for(int i = 2; i <= 8192; i*=2)

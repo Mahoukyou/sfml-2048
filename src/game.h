@@ -13,10 +13,10 @@ public:
 	~Game() = default;
 
 	Game(const Game&) = delete;
-	Game(Game&&) = delete;
+	Game(Game&&) noexcept = delete;
 	
 	Game& operator=(const Game&) = delete;
-	Game& operator=(Game&&) = delete;
+	Game& operator=(Game&&) noexcept = delete;
 
 	void main_loop();
 
