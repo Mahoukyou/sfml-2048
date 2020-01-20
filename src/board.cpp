@@ -48,7 +48,6 @@ bool Board::spawn_new_tile()
 {
 	// todo, rename the empty tiles here or the background oens (since it is confusing)
 	std::vector<size_t> empty_tiles{ get_empty_tiles() };
-
 	if (empty_tiles.empty())
 	{
 		return false;
@@ -148,7 +147,7 @@ sf::Vector2f Board::get_tile_position(const unsigned x, const unsigned y) const 
 		y * tile_size_.y + y * tile_padding_ + tile_padding_ / 2.0f };
 }
 
-size_t Board::xy_to_index(const unsigned x, const unsigned y) const noexcept
+size_t Board::xy_to_index(const size_t x, const size_t y) const noexcept
 {
 	return y * size().x + x;
 }
@@ -203,7 +202,7 @@ std::optional<sf::Vector2i> Board::get_next_non_empty_position(const sf::Vector2
 	return next_not_empty_position;
 }
 
-std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(const e_direction direction)
+std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(const e_direction direction) const
 {
 	std::vector<size_t> x_vec, y_vec;
 	x_vec.reserve(size().x);
@@ -267,135 +266,31 @@ bool Board::merge_tiles(const e_direction direction)
 	return any_merged;
 }
 
-bool Board::move_tiles(e_direction direction)
+bool Board::move_tiles(const e_direction direction)
 {
 	bool any_moved{ false };
-	
-	switch (direction)
+
+	const auto [x_vector, y_vector] = get_sequence_vectors(direction);
+	for (const auto x : x_vector)
 	{
-	case e_direction::NORTH:
-		for (unsigned x = 0; x < size().x; ++x)
+		for (const auto y : y_vector)
 		{
-			for (unsigned y_begin = 0; y_begin < size().y; ++y_begin)
+			if (board_[xy_to_index(x, y)] != 0)
 			{
-				if (board_[xy_to_index(x, y_begin)] != 0)
-				{
-					continue;
-				}
-
-				bool any_local_moved{ false };
-				for (unsigned y = y_begin + 1; y < size().y; ++y)
-				{
-					if (board_[xy_to_index(x, y)] != 0)
-					{
-						std::swap(board_[xy_to_index(x, y_begin)], board_[xy_to_index(x, y)]);
-						any_moved = true;
-						any_local_moved = true;
-						break;
-					}
-				}
-
-				if (!any_local_moved)
-				{
-					break;
-				}
+				continue;
 			}
-		}
-		break;
 
-	case e_direction::SOUTH:
-		for (unsigned x = 0; x < size().x; ++x)
-		{
-			for (int y_begin = size().y - 1; y_begin >= 0; --y_begin)
+			const auto next_non_empty_position{ get_next_non_empty_position({static_cast<int>(x), static_cast<int>(y)}, direction) };
+			if (!next_non_empty_position)
 			{
-				if (board_[xy_to_index(x, y_begin)] != 0)
-				{
-					continue;
-				}
-
-				bool any_local_moved{ false };
-				for (int y = y_begin - 1; y >= 0; --y)
-				{
-					if (board_[xy_to_index(x, y)] != 0)
-					{
-						std::swap(board_[xy_to_index(x, y_begin)], board_[xy_to_index(x, y)]);
-						any_moved = true;
-						any_local_moved = true;
-						break;
-					}
-				}
-
-				if (!any_local_moved)
-				{
-					break;
-				}
+				continue;
 			}
+
+			const auto [new_x, new_y] = next_non_empty_position.value();
+			std::swap(board_[xy_to_index(x, y)], board_[xy_to_index(new_x, new_y)]);
+			any_moved = true;
 		}
-		break;
-
-	case e_direction::WEST:
-		for (unsigned y = 0; y < size().y; ++y)
-		{
-			for (unsigned x_begin = 0; x_begin < size().x; ++x_begin)
-			{
-				if (board_[xy_to_index(x_begin, y)] != 0)
-				{
-					continue;
-				}
-
-				bool any_local_moved{ false };
-				for (unsigned x = x_begin + 1; x < size().x; ++x)
-				{
-					if (board_[xy_to_index(x, y)] != 0)
-					{
-						std::swap(board_[xy_to_index(x_begin, y)], board_[xy_to_index(x, y)]);
-						any_moved = true;
-						any_local_moved = true;
-						break;
-					}
-				}
-
-				if (!any_local_moved)
-				{
-					break;
-				}
-			}
-		}
-		break;
-		
-	case e_direction::EAST:
-		for (unsigned y = 0; y < size().y; ++y)
-		{
-			for (int x_begin = size().x - 1; x_begin >= 0; --x_begin)
-			{
-				if (board_[xy_to_index(x_begin, y)] != 0)
-				{
-					continue;
-				}
-
-				bool any_local_moved{ false };
-				for (int x = x_begin - 1; x >= 0; --x)
-				{
-					if (board_[xy_to_index(x, y)] != 0)
-					{
-						std::swap(board_[xy_to_index(x_begin, y)], board_[xy_to_index(x, y)]);
-						any_moved = true;
-						any_local_moved = true;
-						break;
-					}
-				}
-
-				if (!any_local_moved)
-				{
-					break;
-				}
-			}
-		}
-		break;
-
-	default:; // todo
 	}
-	
 
 	return any_moved;
 }
