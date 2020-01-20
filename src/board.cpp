@@ -4,6 +4,7 @@
 #include "SFML/Graphics.hpp"
 #include <stdexcept>
 #include <random>
+#include <cassert>
 
 
 // TODO, make the size a single value, since it's always gonna be x by x
@@ -16,7 +17,7 @@ Board::Board(const unsigned size, const sf::Vector2f& render_size) :
 		throw std::invalid_argument{ "Board size is not valid" };
 	}
 
-	board_.resize(size * size, 0);
+	board_.resize(size * size);
 
 	init_background_tiles();
 	set_render_size(render_size);
@@ -38,8 +39,8 @@ void Board::set_render_size(const sf::Vector2f& render_size)
 		{
 			const auto index = xy_to_index(x, y);
 
-			empty_tiles_[index].setSize(tile_size_);
-			empty_tiles_[index].setPosition(get_tile_position(x, y));
+			background_tiles_[index].setSize(tile_size_);
+			background_tiles_[index].setPosition(get_tile_position(x, y));
 		}
 	}
 }
@@ -62,8 +63,7 @@ bool Board::spawn_new_tile()
 	const std::uniform_int_distribution<> tile_value_dist{ 1, 2 };
 	const unsigned new_tile_value = tile_value_dist(gen) * 2;
 
-	// todo, spawn tile
-	board_[random_empty_tile] = new_tile_value;
+	board_[random_empty_tile] = new_tile(index_to_xy(random_empty_tile), new_tile_value);
 
 	return true;
 }
@@ -75,7 +75,7 @@ std::vector<size_t> Board::get_empty_tiles()
 	std::vector<size_t> empty_tiles;
 	for (size_t i = 0; i < board_.size(); ++i)
 	{
-		if (board_[i] == 0)
+		if (board_[i].value == 0)
 		{
 			empty_tiles.push_back(i);
 		}
@@ -104,30 +104,39 @@ void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	states.transform *= getTransform();
 	target.draw(background_, states);
 
-	for (const auto& tile : empty_tiles_)
+	for (const auto& background_tile : background_tiles_)
 	{
-		target.draw(tile, states);
+		target.draw(background_tile, states);
 	}
-
-
-
-	// todo, test
-	sf::Sprite tile_sprite{};
-	for (unsigned x = 0; x < size(); ++x)
+	
+	for(const auto& tile : board_)
 	{
-		for (unsigned y = 0; y < size(); ++y)
-		{
-			const unsigned tile = board_[xy_to_index(x, y)];
-			if (tile != 0)
-			{
-				tile_sprite.setTexture(*ResourceManager::instance().get_texture(std::to_string(tile)));
-				tile_sprite.setPosition(get_tile_position(x, y));
-				const auto size = tile_sprite.getTexture()->getSize();
-				tile_sprite.setScale(tile_size_.x / size.x, tile_size_.y / size.y);
-				target.draw(tile_sprite);
-			}
-		}
+		target.draw(tile.sprite);
 	}
+}
+
+Tile& Board::tile(const size_t x, const size_t y) noexcept
+{
+	assert(x < size() && y < size() && "Invalid x or y position");
+	return board_[xy_to_index(x, y)];
+}
+
+const Tile& Board::tile(const size_t x, const size_t y) const noexcept
+{
+	assert(x < size() && y < size() && "Invalid x or y position");
+	return board_[xy_to_index(x, y)];
+}
+
+Tile& Board::tile(const size_t index) noexcept
+{
+	assert(index < board_.size() && "Invalid index");
+	return board_[index];
+}
+
+const Tile& Board::tile(const size_t index) const noexcept
+{
+	assert(index < board_.size() && "Invalid index");
+	return board_[index];
 }
 
 void Board::init_background_tiles()
@@ -136,7 +145,7 @@ void Board::init_background_tiles()
 
 	sf::RectangleShape tile;
 	tile.setFillColor(sf::Color{ 232, 212, 160 });
-	empty_tiles_.resize(size() * size(), tile);
+	background_tiles_.resize(size() * size(), tile);
 }
 
 sf::Vector2f Board::get_tile_size(const sf::Vector2f& render_size) const noexcept
@@ -157,6 +166,15 @@ sf::Vector2f Board::get_tile_position(const unsigned x, const unsigned y) const 
 size_t Board::xy_to_index(const size_t x, const size_t y) const noexcept
 {
 	return y * size() + x;
+}
+
+sf::Vector2i Board::index_to_xy(size_t index) const noexcept
+{
+	sf::Vector2i result;
+	result.x = static_cast<int>(index % size());
+	result.y = static_cast<int>(index / size());
+
+	return result;
 }
 
 sf::Vector2i Board::get_direction_vector(const e_direction direction) const
@@ -191,7 +209,7 @@ std::optional<sf::Vector2i> Board::get_next_non_empty_position(const sf::Vector2
 {
 	const auto is_empty = [&](const sf::Vector2i& pos)
 	{
-		return board_[xy_to_index(pos.x, pos.y)] == 0;
+		return tile(pos.x, pos.y).value == 0;
 	};
 
 	auto next_not_empty_position = get_next_position(position, direction_vector);
@@ -234,7 +252,9 @@ std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(
 
 bool Board::has_empty_tile() const
 {
-	return std::find(board_.begin(), board_.end(), 0) != board_.end();
+	const auto result = std::find_if(board_.begin(), board_.end(), [](const Tile& tile) { return tile.value == 0; });
+
+	return result != board_.end();
 }
 
 bool Board::any_merge_available() const
@@ -250,7 +270,7 @@ bool Board::any_merge_available() const
 	{
 		for (size_t y = 0; y < size(); ++y)
 		{
-			if (board_[xy_to_index(x, y)] == 0)
+			if (tile(x, y).value == 0)
 			{
 				continue;
 			}
@@ -264,7 +284,7 @@ bool Board::any_merge_available() const
 				}
 
 				const auto [next_x, next_y] = next_position.value();
-				if (board_[xy_to_index(x, y)] == board_[xy_to_index(next_x, next_y)])
+				if (tile(x,y).value == tile(next_x, next_y).value)
 				{
 					return true;
 				}
@@ -273,6 +293,21 @@ bool Board::any_merge_available() const
 	}
 
 	return false;
+}
+
+Tile Board::new_tile(const sf::Vector2i position, const unsigned value) const
+{
+	Tile tile{};
+	if (value != 0)
+	{
+		tile.sprite.setTexture(*ResourceManager::instance().get_texture(std::to_string(value)));
+		tile.sprite.setPosition(get_tile_position(position.x, position.y));
+		const auto size = tile.sprite.getTexture()->getSize();
+		tile.sprite.setScale(tile_size_.x / size.x, tile_size_.y / size.y);
+	}
+	tile.value = value;
+
+	return tile;
 }
 
 bool Board::merge_tiles(const sf::Vector2i direction_vector)
@@ -285,7 +320,7 @@ bool Board::merge_tiles(const sf::Vector2i direction_vector)
 		for (const auto y : y_vector)
 		{
 			// todo, cehck for max value!
-			if (board_[xy_to_index(x, y)] == 0)
+			if (tile(x, y).value == 0)
 			{
 				continue;
 			}
@@ -297,10 +332,10 @@ bool Board::merge_tiles(const sf::Vector2i direction_vector)
 			}
 
 			const auto [next_x, next_y] = next_not_empty_position.value();
-			if (board_[xy_to_index(x, y)] == board_[xy_to_index(next_x, next_y)])
+			if (tile(x, y).value == tile(next_x, next_y).value)
 			{
-				board_[xy_to_index(x, y)] *= 2;
-				board_[xy_to_index(next_x, next_y)] = 0;
+				tile(x, y) = new_tile({static_cast<int>(x), static_cast<int>(y)}, tile(x,y).value * 2);
+				tile(next_x, next_y) = {};
 
 				any_merged = true;
 			}
@@ -319,7 +354,7 @@ bool Board::move_tiles(const sf::Vector2i direction_vector)
 	{
 		for (const auto y : y_vector)
 		{
-			if (board_[xy_to_index(x, y)] != 0)
+			if (tile(x, y).value != 0)
 			{
 				continue;
 			}
@@ -331,7 +366,9 @@ bool Board::move_tiles(const sf::Vector2i direction_vector)
 			}
 
 			const auto [new_x, new_y] = next_non_empty_position.value();
-			std::swap(board_[xy_to_index(x, y)], board_[xy_to_index(new_x, new_y)]);
+			tile(x, y) = new_tile({static_cast<int>(x), static_cast<int>(y)}, tile(new_x, new_y).value);
+			tile(new_x, new_y) = {};
+			
 			any_moved = true;
 		}
 	}

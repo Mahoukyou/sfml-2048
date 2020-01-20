@@ -10,6 +10,11 @@
 // tmp
 #include "SFML/Graphics.hpp"
 
+struct Tile
+{
+	sf::Sprite sprite{};
+	unsigned value{};
+};
 
 
 class Board : public sf::Drawable, public sf::Transformable
@@ -45,11 +50,17 @@ public:
 protected:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+private:
+	Tile& tile(size_t x, size_t y) noexcept;
+	const Tile& tile(size_t x, size_t y) const noexcept;
+	Tile& tile(size_t index) noexcept;
+	const Tile& tile(size_t index) const noexcept;
 	void init_background_tiles();
 
 	[[nodiscard]] sf::Vector2f get_tile_size(const sf::Vector2f& render_size) const noexcept;
 	[[nodiscard]] sf::Vector2f get_tile_position(unsigned x, unsigned y) const noexcept;
 	[[nodiscard]] size_t xy_to_index(size_t x, size_t y) const noexcept;
+	[[nodiscard]] sf::Vector2i index_to_xy(size_t index) const noexcept;
 
 	[[nodiscard]] sf::Vector2i get_direction_vector(e_direction direction) const;
 	[[nodiscard]] std::optional<sf::Vector2i> get_next_position(sf::Vector2i position, sf::Vector2i direction_vector) const;
@@ -58,16 +69,19 @@ protected:
 
 	[[nodiscard]] bool has_empty_tile() const;
 	[[nodiscard]] bool any_merge_available() const;
+
+	Tile new_tile(sf::Vector2i position, unsigned value) const;
 	
 	bool merge_tiles(sf::Vector2i direction_vector);
 	bool move_tiles(sf::Vector2i direction_vector);
+	
 private:
 	unsigned size_;
-	std::vector<unsigned> board_;
+	std::vector<Tile> board_;
 
 	// TODO
 	float tile_padding_{ 10 };
 	sf::Vector2f tile_size_{};
 	sf::RectangleShape background_;
-	std::vector<sf::RectangleShape> empty_tiles_;
+	std::vector<sf::RectangleShape> background_tiles_;
 };
