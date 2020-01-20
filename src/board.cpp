@@ -86,8 +86,10 @@ std::vector<size_t> Board::get_empty_tiles()
 
 bool Board::move(e_direction direction)
 {
-	const auto merge_result = merge_tiles(direction);
-	const auto move_result = move_tiles(direction);
+	const auto direction_vector{ get_direction_vector(direction) };
+	
+	const auto merge_result = merge_tiles(direction_vector);
+	const auto move_result = move_tiles(direction_vector);
 
 	return merge_result || move_result;
 }
@@ -168,9 +170,9 @@ sf::Vector2i Board::get_direction_vector(const e_direction direction) const
 	return direction_vectors.find(direction)->second;
 }
 
-std::optional<sf::Vector2i> Board::get_next_position(sf::Vector2i position, const e_direction direction) const
+std::optional<sf::Vector2i> Board::get_next_position(sf::Vector2i position, const sf::Vector2i direction_vector) const
 {
-	position += get_direction_vector(direction);;
+	position += direction_vector;
 	if (position.x < 0 || position.y < 0 ||
 		position.x >= static_cast<int>(size().x) || position.y >= static_cast<int>(size().y))
 	{
@@ -180,18 +182,18 @@ std::optional<sf::Vector2i> Board::get_next_position(sf::Vector2i position, cons
 	return position;
 }
 
-std::optional<sf::Vector2i> Board::get_next_non_empty_position(const sf::Vector2i position, const e_direction direction) const
+std::optional<sf::Vector2i> Board::get_next_non_empty_position(const sf::Vector2i position, const sf::Vector2i direction_vector) const
 {
 	const auto is_empty = [&](const sf::Vector2i& pos)
 	{
 		return board_[xy_to_index(pos.x, pos.y)] == 0;
 	};
 
-	auto next_not_empty_position = get_next_position(position, direction);
+	auto next_not_empty_position = get_next_position(position, direction_vector);
 	while (next_not_empty_position &&
 		is_empty(next_not_empty_position.value()))
 	{
-		next_not_empty_position = get_next_position(next_not_empty_position.value(), direction);
+		next_not_empty_position = get_next_position(next_not_empty_position.value(), direction_vector);
 	}
 
 	if (!next_not_empty_position || is_empty(next_not_empty_position.value()))
@@ -202,7 +204,7 @@ std::optional<sf::Vector2i> Board::get_next_non_empty_position(const sf::Vector2
 	return next_not_empty_position;
 }
 
-std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(const e_direction direction) const
+std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(const sf::Vector2i direction_vector) const
 {
 	std::vector<size_t> x_vec, y_vec;
 	x_vec.reserve(size().x);
@@ -217,12 +219,10 @@ std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(
 		y_vec.push_back(y);
 	}
 
-	const auto direction_vector = get_direction_vector(direction);
 	if (direction_vector.x == -1)
 	{
 		std::reverse(x_vec.begin(), x_vec.end());
 	}
-
 	if (direction_vector.y == -1)
 	{
 		std::reverse(y_vec.begin(), y_vec.end());
@@ -231,11 +231,11 @@ std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(
 	return std::make_pair(std::move(x_vec), std::move(y_vec));
 }
 
-bool Board::merge_tiles(const e_direction direction)
+bool Board::merge_tiles(const sf::Vector2i direction_vector)
 {
 	bool any_merged{ false };
 
-	const auto [x_vector, y_vector] = get_sequence_vectors(direction);
+	const auto [x_vector, y_vector] = get_sequence_vectors(direction_vector);
 	for (const auto x : x_vector)
 	{
 		for (const auto y : y_vector)
@@ -246,7 +246,7 @@ bool Board::merge_tiles(const e_direction direction)
 				continue;
 			}
 
-			auto next_not_empty_position = get_next_non_empty_position({ static_cast<int>(x), static_cast<int>(y) }, direction);
+			auto next_not_empty_position = get_next_non_empty_position({ static_cast<int>(x), static_cast<int>(y) }, direction_vector);
 			if (!next_not_empty_position)
 			{
 				continue;
@@ -266,11 +266,11 @@ bool Board::merge_tiles(const e_direction direction)
 	return any_merged;
 }
 
-bool Board::move_tiles(const e_direction direction)
+bool Board::move_tiles(const sf::Vector2i direction_vector)
 {
 	bool any_moved{ false };
 
-	const auto [x_vector, y_vector] = get_sequence_vectors(direction);
+	const auto [x_vector, y_vector] = get_sequence_vectors(direction_vector);
 	for (const auto x : x_vector)
 	{
 		for (const auto y : y_vector)
@@ -280,7 +280,7 @@ bool Board::move_tiles(const e_direction direction)
 				continue;
 			}
 
-			const auto next_non_empty_position{ get_next_non_empty_position({static_cast<int>(x), static_cast<int>(y)}, direction) };
+			const auto next_non_empty_position{ get_next_non_empty_position({static_cast<int>(x), static_cast<int>(y)}, direction_vector) };
 			if (!next_non_empty_position)
 			{
 				continue;

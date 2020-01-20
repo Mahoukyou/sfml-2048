@@ -51,12 +51,12 @@ protected:
 	[[nodiscard]] size_t xy_to_index(size_t x, size_t y) const noexcept;
 
 	[[nodiscard]] sf::Vector2i get_direction_vector(e_direction direction) const;
-	[[nodiscard]] std::optional<sf::Vector2i> get_next_position(sf::Vector2i position, e_direction direction) const;
-	[[nodiscard]] std::optional<sf::Vector2i> get_next_non_empty_position(sf::Vector2i position, e_direction direction) const;
-	[[nodiscard]] std::pair<std::vector<size_t>, std::vector<size_t>> get_sequence_vectors(e_direction direction) const;
+	[[nodiscard]] std::optional<sf::Vector2i> get_next_position(sf::Vector2i position, sf::Vector2i direction_vector) const;
+	[[nodiscard]] std::optional<sf::Vector2i> get_next_non_empty_position(sf::Vector2i position, sf::Vector2i direction_vector) const;
+	[[nodiscard]] std::pair<std::vector<size_t>, std::vector<size_t>> get_sequence_vectors(sf::Vector2i direction_vector) const;
 	
-	bool merge_tiles(e_direction direction);
-	bool move_tiles(e_direction direction);
+	bool merge_tiles(sf::Vector2i direction_vector);
+	bool move_tiles(sf::Vector2i direction_vector);
 private:
 	sf::Vector2u size_;
 	std::vector<unsigned> board_;
