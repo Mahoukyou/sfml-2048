@@ -4,7 +4,6 @@
 #include "SFML/Graphics.hpp"
 #include <stdexcept>
 #include <random>
-#include <optional>
 
 
 // TODO, make the size a single value, since it's always gonna be x by x
@@ -154,12 +153,62 @@ size_t Board::xy_to_index(const unsigned x, const unsigned y) const noexcept
 	return y * size().x + x;
 }
 
+sf::Vector2i Board::get_direction_vector(const e_direction direction) const
+{
+	// We could also use non static constexpr std::array and static cast direction to int
+	// for better performance, but it's more error prone (i.e. when we change order in the enum)
+	// either static map or make it a member variable {OR SWITCH IT UP}
+	static const std::map<e_direction, sf::Vector2i> direction_vectors
+	{
+			{e_direction::NORTH, {0, 1}},
+			{e_direction::SOUTH, {0, -1}},
+			{e_direction::WEST, {1, 0}},
+			{e_direction::EAST, {-1, 0}}
+	};
+
+	return direction_vectors.find(direction)->second;
+}
+
+std::optional<sf::Vector2i> Board::get_next_position(sf::Vector2i position, const e_direction direction) const
+{
+	position += get_direction_vector(direction);;
+	if (position.x < 0 || position.y < 0 ||
+		position.x >= static_cast<int>(size().x) || position.y >= static_cast<int>(size().y))
+	{
+		return std::nullopt;
+	}
+
+	return position;
+}
+
+std::optional<sf::Vector2i> Board::get_next_non_empty_position(const sf::Vector2i position, const e_direction direction) const
+{
+	const auto is_empty = [&](const sf::Vector2i& pos)
+	{
+		return board_[xy_to_index(pos.x, pos.y)] == 0;
+	};
+
+	auto next_not_empty_position = get_next_position(position, direction);
+	while (next_not_empty_position &&
+		is_empty(next_not_empty_position.value()))
+	{
+		next_not_empty_position = get_next_position(next_not_empty_position.value(), direction);
+	}
+
+	if (!next_not_empty_position || is_empty(next_not_empty_position.value()))
+	{
+		return std::nullopt;
+	}
+
+	return next_not_empty_position;
+}
+
 std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(const e_direction direction)
 {
 	std::vector<size_t> x_vec, y_vec;
 	x_vec.reserve(size().x);
 	y_vec.reserve(size().y);
-	for(size_t x = 0; x < size().x; ++x)
+	for (size_t x = 0; x < size().x; ++x)
 	{
 		x_vec.push_back(x);
 	}
@@ -169,16 +218,8 @@ std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(
 		y_vec.push_back(y);
 	}
 
-	// todo, move to difeerent function (since we are using the same vectors in getnexttpos)
-	const std::map<e_direction, sf::Vector2<int>> direction_vectors
-	{
-			{e_direction::NORTH, {0, 1}},
-			{e_direction::SOUTH, {0, -1}},
-			{e_direction::WEST, {1, 0}},
-			{e_direction::EAST, {-1, 0}}
-	};
-	const auto direction_vector = direction_vectors.find(direction)->second;
-	if(direction_vector.x == -1)
+	const auto direction_vector = get_direction_vector(direction);
+	if (direction_vector.x == -1)
 	{
 		std::reverse(x_vec.begin(), x_vec.end());
 	}
@@ -195,38 +236,6 @@ bool Board::merge_tiles(const e_direction direction)
 {
 	bool any_merged{ false };
 
-
-	// TODO, FIX TYPES, SINCE TYPE MISMATCH IS ALL OVER THE PLACE
-	const auto get_next_position = [&](int x, int y) -> std::optional<std::pair<size_t, size_t>>
-	{
-		// TODO, MMAKE A SINGLE GET DIRECTION VECTOR FUNC
-		const std::map<e_direction, sf::Vector2<int>> direction_vectors
-		{
-			{e_direction::NORTH, {0, 1}},
-			{e_direction::SOUTH, {0, -1}},
-			{e_direction::WEST, {1, 0}},
-			{e_direction::EAST, {-1, 0}}
-		};
-		const auto direction_vector = direction_vectors.find(direction)->second;
-
-		x += direction_vector.x;
-		y += direction_vector.y;
-
-		if (x < 0 || y < 0 || x >= size().x || y >= size().y)
-		{
-			return std::nullopt;
-		}
-
-		return std::make_pair(x, y);
-
-	};
-
-	const auto is_empty = [&](std::pair<size_t, size_t> t)
-	{
-		const auto [x, y] = t;
-		return board_[xy_to_index(x, y)] == 0;
-	};
-	
 	const auto [x_vector, y_vector] = get_sequence_vectors(direction);
 	for (const auto x : x_vector)
 	{
@@ -237,16 +246,9 @@ bool Board::merge_tiles(const e_direction direction)
 			{
 				continue;
 			}
-			
-			auto next_not_empty_position = get_next_position(x, y);
-			while (next_not_empty_position &&
-				is_empty(next_not_empty_position.value()))
-			{
-				const auto [next_x, next_y] = next_not_empty_position.value();
-				next_not_empty_position = get_next_position(next_x, next_y);
-			} 
 
-			if (!next_not_empty_position || is_empty(next_not_empty_position.value()))
+			auto next_not_empty_position = get_next_non_empty_position({ static_cast<int>(x), static_cast<int>(y) }, direction);
+			if (!next_not_empty_position)
 			{
 				continue;
 			}
@@ -261,7 +263,7 @@ bool Board::merge_tiles(const e_direction direction)
 			}
 		}
 	}
-	
+
 	return any_merged;
 }
 
