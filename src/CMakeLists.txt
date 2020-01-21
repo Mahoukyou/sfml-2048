@@ -17,6 +17,8 @@ set(
 	board.cpp
 	resourcemanager.h
 	resourcemanager.cpp
+	scenemanager.h
+	scenemanager.cpp
 )
 add_executable(sfml-2048 ${2048_srcs})
 target_link_libraries(sfml-2048 PRIVATE sfml-graphics sfml-window)

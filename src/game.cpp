@@ -1,22 +1,25 @@
 #include "game.h"
 
 #include "mainscene.h"
+#include "scenemanager.h"
 
 Game::Game() :
 	window_{ std::make_unique<sf::RenderWindow>(sf::VideoMode(600, 600), "SFML works!") }
 {
 	window_->setFramerateLimit(60);
 	
-	set_new_scene(std::make_unique<MainScene>());
+	SceneManager::instance().set_new_scene(std::make_unique<MainScene>());
 }
 
 void Game::main_loop()
 {
 	sf::Clock delta_clock;
+
+	auto& scene_manager = SceneManager::instance();
 	while (window_->isOpen())
 	{
 		const auto delta_time = delta_clock.restart();
-		process_pending_scene();
+		scene_manager.process_pending_scene();
 
 		sf::Event event{};
 		while (window_->pollEvent(event))
@@ -26,35 +29,16 @@ void Game::main_loop()
 				window_->close();
 			}
 
-			if (current_scene())
+			if (scene_manager.current_scene())
 			{
-				current_scene_->process_event(event);
+				scene_manager.current_scene()->process_event(event);
 			}
 		}
 
-		if (current_scene())
+		if (scene_manager.current_scene())
 		{
-			current_scene_->update(delta_time.asSeconds());
-			current_scene_->render(*window_);
+			scene_manager.current_scene()->update(delta_time.asSeconds());
+			scene_manager.current_scene()->render(*window_);
 		}
-	}
-}
-
-void Game::set_new_scene(std::unique_ptr<IScene> new_scene)
-{
-	pending_new_scene_ = std::move(new_scene);
-}
-
-const IScene* Game::current_scene() const noexcept
-{
-	return current_scene_.get();
-}
-
-void Game::process_pending_scene()
-{
-	if (pending_new_scene_)
-	{
-		current_scene_ = std::move(pending_new_scene_.value());
-		pending_new_scene_ = std::nullopt;
 	}
 }
