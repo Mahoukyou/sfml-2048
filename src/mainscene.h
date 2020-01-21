@@ -14,6 +14,8 @@ public:
 	void render(sf::RenderWindow& target) override;
 	
 private:
+	bool finish_on_max_value_{ true };
+	const unsigned max_value_{ };
 	Board board_;
 
 	std::optional<Board::e_direction> pending_move{ std::nullopt };

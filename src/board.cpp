@@ -8,8 +8,9 @@
 
 
 // TODO, make the size a single value, since it's always gonna be x by x
-Board::Board(const unsigned size, const sf::Vector2f& render_size) :
-	size_{ size }
+Board::Board(const unsigned size, const sf::Vector2f& render_size, const unsigned max_value) :
+	size_{ size },
+	max_value_{ max_value }
 {
 	if (size < 2)
 	{
@@ -26,6 +27,11 @@ Board::Board(const unsigned size, const sf::Vector2f& render_size) :
 unsigned Board::size() const noexcept
 {
 	return size_;
+}
+
+unsigned Board::max_value() const noexcept
+{
+	return max_value_;
 }
 
 void Board::set_render_size(const sf::Vector2f& render_size)
@@ -97,6 +103,12 @@ bool Board::move(e_direction direction)
 bool Board::any_moves_available() const
 {
 	return has_empty_tile() || any_merge_available();
+}
+
+bool Board::contains_value(const unsigned value) const
+{
+	const auto result = std::find_if(board_.begin(), board_.end(), [value](const Tile& tile) { return tile.value == value; });
+	return result != board_.end();
 }
 
 void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -253,7 +265,6 @@ std::pair<std::vector<size_t>, std::vector<size_t>> Board::get_sequence_vectors(
 bool Board::has_empty_tile() const
 {
 	const auto result = std::find_if(board_.begin(), board_.end(), [](const Tile& tile) { return tile.value == 0; });
-
 	return result != board_.end();
 }
 
@@ -319,8 +330,8 @@ bool Board::merge_tiles(const sf::Vector2i direction_vector)
 	{
 		for (const auto y : y_vector)
 		{
-			// todo, cehck for max value!
-			if (tile(x, y).value == 0)
+			if (const auto tile_value = tile(x, y).value;
+				tile_value == 0 || tile_value == max_value())
 			{
 				continue;
 			}

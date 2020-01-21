@@ -6,7 +6,8 @@
 #include <iostream>
 
 MainScene::MainScene() :
-	board_{ 4, {600, 600} }
+	max_value_{2048},
+	board_{ 16, {600, 600}, max_value_ }
 {
 	// preload the textures atm so we won't have to deal with filenames in board
 	for(int i = 2; i <= 8192; i*=2)
@@ -55,11 +56,15 @@ void MainScene::update(const float /*delta_time*/)
 			board_.spawn_new_tile();
 		}
 
-		if (!board_.any_moves_available())
+		if (finish_on_max_value_ && board_.contains_value(max_value_))
+		{
+			std::cout << "WON";
+		}
+		else if (!board_.any_moves_available())
 		{
 			std::cout << "END GMAE";
 		}
-		
+
 		pending_move = std::nullopt;
 	}
 }

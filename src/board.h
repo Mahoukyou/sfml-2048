@@ -28,10 +28,11 @@ public:
 		EAST
 	};
 
-	Board(unsigned size, const sf::Vector2f& render_size);
+	Board(unsigned size, const sf::Vector2f& render_size, unsigned max_value);
 	~Board() = default;
 
 	[[nodiscard]] unsigned size() const noexcept;
+	[[nodiscard]] unsigned max_value() const noexcept;
 
 	void set_render_size(const sf::Vector2f& render_size);
 
@@ -40,6 +41,8 @@ public:
 
 	bool move(e_direction direction);
 	[[nodiscard]] bool any_moves_available() const;
+
+	[[nodiscard]] bool contains_value(unsigned value) const;
 	
 protected:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
@@ -70,8 +73,9 @@ private:
 	bool move_tiles(sf::Vector2i direction_vector);
 	
 private:
-	unsigned size_;
+	const unsigned size_;
 	std::vector<Tile> board_;
+	const unsigned max_value_;
 
 	// TODO
 	float tile_padding_{ 10 };
