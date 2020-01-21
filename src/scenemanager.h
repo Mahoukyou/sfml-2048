@@ -23,7 +23,6 @@ public:
 	[[nodiscard]] IScene* current_scene() noexcept;
 	[[nodiscard]] const IScene* current_scene() const noexcept;
 
-	
 private:
 	SceneManager() = default;
 

@@ -8,7 +8,6 @@ ResourceManager& ResourceManager::instance()
 
 const sf::Texture* ResourceManager::load_texture(const std::string& file, const std::string& id)
 {
-
 	// todo, do I remove the old texture and reload or simply return as it is now?
 	if (const auto result = get_texture(id))
 	{

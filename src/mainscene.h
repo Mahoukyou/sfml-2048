@@ -7,7 +7,7 @@ class MainScene : public IScene
 {
 public:
 	MainScene();
-	virtual ~MainScene() = default;
+	~MainScene() override = default;
 
 	void process_event(const sf::Event& event) override;
 	void update(float delta_time) override;

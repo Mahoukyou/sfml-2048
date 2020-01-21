@@ -1,13 +1,16 @@
 #include "mainscene.h"
 
 #include "resourcemanager.h"
+#include "scenemanager.h"
+#include "endgamescene.h"
 
 #include "SFML/Graphics.hpp"
+
 #include <iostream>
 
 MainScene::MainScene() :
-	max_value_{2048},
-	board_{ 16, {600, 600}, max_value_ }
+	max_value_{ 2048 },
+	board_{ 4, {600, 600}, max_value_ }
 {
 	// preload the textures atm so we won't have to deal with filenames in board
 	for(int i = 2; i <= 8192; i*=2)
@@ -56,13 +59,17 @@ void MainScene::update(const float /*delta_time*/)
 			board_.spawn_new_tile();
 		}
 
+		// todo score
 		if (finish_on_max_value_ && board_.contains_value(max_value_))
 		{
-			std::cout << "WON";
+			SceneManager::instance().set_new_scene(
+				std::make_unique<EndGameScene>(EndGameScene::e_end_game_state::WON, 0));
 		}
 		else if (!board_.any_moves_available())
 		{
-			std::cout << "END GMAE";
+
+			SceneManager::instance().set_new_scene(
+				std::make_unique<EndGameScene>(EndGameScene::e_end_game_state::LOST, 0));
 		}
 
 		pending_move = std::nullopt;
