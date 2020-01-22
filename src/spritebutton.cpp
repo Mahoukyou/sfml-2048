@@ -5,7 +5,19 @@
 #include "SFML/Graphics/Sprite.hpp"
 #include "SFML/Graphics/Texture.hpp"
 
+#include "game.h"
+
 #include <cassert>
+
+namespace
+{
+	// todo, move into some utility class if needed somewhere else
+	sf::Vector2i get_mouse_pos()
+	{
+		const auto& window = Game::instance().window();
+		return sf::Mouse::getPosition(window);
+	}
+}
 
 SpriteButton::SpriteButton(const sf::Vector2u size) :
 	size_{ size }
@@ -20,11 +32,10 @@ bool SpriteButton::process_event(const sf::Event& event)
 		return false;
 	}
 
-	// todo MOUSE POS RELATIVE TO WINDOW
 	switch (event.type)
 	{
 	case sf::Event::MouseButtonPressed:		
-		if (state_ == e_state::hovered && is_mouse_in_area(0,0))
+		if (state_ == e_state::hovered && is_mouse_in_area(get_mouse_pos()))
 		{
 			state_ = e_state::pressed;
 			// todo, on pressed?
@@ -33,20 +44,24 @@ bool SpriteButton::process_event(const sf::Event& event)
 		return true;
 
 	case sf::Event::MouseButtonReleased:
-		if (state_ == e_state::pressed && is_mouse_in_area(0,0))
+		if (state_ == e_state::pressed && is_mouse_in_area(get_mouse_pos()))
 		{
-			state_ = e_state::normal;
+			state_ = e_state::hovered;
 			if (on_clicked)
 			{
 				on_clicked();
 			}
+		}
+		else
+		{
+			state_ = e_state::normal;
 		}
 		
 		return true;
 
 	case sf::Event::MouseMoved:
 	{
-		const auto mouse_in_area = is_mouse_in_area(0,0);
+		const auto mouse_in_area = is_mouse_in_area(get_mouse_pos());
 		if (mouse_in_area && state_ == e_state::normal)
 		{
 			state_ = e_state::hovered;
@@ -72,7 +87,7 @@ bool SpriteButton::process_event(const sf::Event& event)
 	}
 }
 
-void SpriteButton::set_texture(const sf::Texture& texture, e_state state)
+void SpriteButton::set_texture(const sf::Texture& texture, const e_state state)
 {
 	assert(static_cast<unsigned>(state) < static_cast<unsigned>(e_state::max) && "Invalid button state");
 
@@ -95,16 +110,16 @@ void SpriteButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
-bool SpriteButton::is_mouse_in_area(const int mouse_x, const int mouse_y) const noexcept
+bool SpriteButton::is_mouse_in_area(const sf::Vector2i mouse_position) const noexcept
 {
 	sf::FloatRect rect{
-		getPosition().x,
-		getPosition().y,
+		0,
+		0,
 		static_cast<float>(size_.x),
 		static_cast<float>(size_.y) };
 
 	rect = getTransform().transformRect(rect);
-	return rect.contains({static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
+	return rect.contains({static_cast<float>(mouse_position.x), static_cast<float>(mouse_position.y)});
 }
 
 sf::Sprite* SpriteButton::get_sprite() const noexcept

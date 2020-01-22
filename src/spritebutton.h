@@ -47,7 +47,7 @@ protected:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 private:
-	[[nodiscard]] bool is_mouse_in_area(int mouse_x, int mouse_y) const noexcept;
+	[[nodiscard]] bool is_mouse_in_area(sf::Vector2i mouse_position) const noexcept;
 	sf::Sprite* get_sprite() const noexcept;
 	sf::Sprite* get_sprite(e_state state) const noexcept;
 	
