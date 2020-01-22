@@ -6,7 +6,6 @@
 class Game
 {
 public:
-	Game();
 	~Game() = default;
 
 	Game(const Game&) = delete;
@@ -15,8 +14,16 @@ public:
 	Game& operator=(const Game&) = delete;
 	Game& operator=(Game&&) noexcept = delete;
 
+	static Game& instance();
+
+	[[nodiscard]] const sf::RenderWindow& window() const noexcept;
+
 	void main_loop();
 
 private:
+	Game();
+
+	void internal_main_loop();
+
 	std::unique_ptr<sf::RenderWindow> window_;
 };

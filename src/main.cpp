@@ -2,6 +2,6 @@
 
 int main()
 {
-	Game game{};
+	Game& game = Game::instance();
 	game.main_loop();
 }
