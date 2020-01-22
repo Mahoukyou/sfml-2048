@@ -3,6 +3,7 @@
 #include "scene.h"
 #include "board.h"
 #include "SFML/Graphics.hpp"
+#include "spritebutton.h"
 
 class MainScene : public IScene
 {
@@ -26,4 +27,7 @@ private:
 
 	sf::RectangleShape background_;
 	sf::Text score_;
+
+	//test button
+	SpriteButton sb;
 };

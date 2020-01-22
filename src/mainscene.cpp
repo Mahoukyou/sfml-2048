@@ -10,7 +10,8 @@
 
 MainScene::MainScene() :
 	max_value_{ 2048 },
-	board_{ 4, {600, 600}, max_value_ }
+	board_{ 4, {600, 600}, max_value_ },
+	sb{{100, 100}}
 {
 	// preload the textures atm so we won't have to deal with filenames in board
 	for(int i = 2; i <= 8192; i*=2)
@@ -34,6 +35,16 @@ MainScene::MainScene() :
 	background_.setFillColor({ 255, 248, 181 });
 
 	init_score();
+
+	sb.setPosition(50, 100);
+	sb.set_texture(*ResourceManager::instance().get_texture("2"), SpriteButton::e_state::normal);
+	sb.set_texture(*ResourceManager::instance().get_texture("4"), SpriteButton::e_state::hovered);
+	sb.set_texture(*ResourceManager::instance().get_texture("8"), SpriteButton::e_state::pressed);
+
+
+	sb.on_hovered = []() {std::cout << "HOVERED\n"; };
+	sb.on_unhovered = []() {std::cout << "unhovered\n"; };
+	sb.on_clicked = []() {std::cout << "clicked\n"; };
 }
 
 void MainScene::process_event(const sf::Event& event)
@@ -58,6 +69,8 @@ void MainScene::process_event(const sf::Event& event)
 		default:;
 		}
 	}
+
+	sb.process_event(event);
 }
 
 void MainScene::update(const float /*delta_time*/)
@@ -91,6 +104,7 @@ void MainScene::render(sf::RenderWindow& target)
 	target.clear();
 	target.draw(background_);
 	target.draw(score_);
+	target.draw(sb);
 	target.draw(board_);
 	target.display();
 }
