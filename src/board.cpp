@@ -34,6 +34,11 @@ unsigned Board::max_value() const noexcept
 	return max_value_;
 }
 
+unsigned Board::score() const noexcept
+{
+	return score_;
+}
+
 void Board::set_render_size(const sf::Vector2f& render_size)
 {
 	background_.setSize(render_size);
@@ -123,7 +128,7 @@ void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	
 	for(const auto& tile : board_)
 	{
-		target.draw(tile.sprite);
+		target.draw(tile.sprite, states);
 	}
 }
 
@@ -311,7 +316,13 @@ Tile Board::new_tile(const sf::Vector2i position, const unsigned value) const
 	Tile tile{};
 	if (value != 0)
 	{
-		tile.sprite.setTexture(*ResourceManager::instance().get_texture(std::to_string(value)));
+		const auto texture = ResourceManager::instance().get_texture(std::to_string(value));
+		if (!texture)
+		{
+			throw std::runtime_error{ "Texture not loaded" };
+		}
+		
+		tile.sprite.setTexture(*texture);
 		tile.sprite.setPosition(get_tile_position(position.x, position.y));
 		const auto size = tile.sprite.getTexture()->getSize();
 		tile.sprite.setScale(tile_size_.x / size.x, tile_size_.y / size.y);
@@ -348,6 +359,7 @@ bool Board::merge_tiles(const sf::Vector2i direction_vector)
 				tile(x, y) = new_tile({static_cast<int>(x), static_cast<int>(y)}, tile(x,y).value * 2);
 				tile(next_x, next_y) = {};
 
+				score_ += tile(x, y).value;
 				any_merged = true;
 			}
 		}

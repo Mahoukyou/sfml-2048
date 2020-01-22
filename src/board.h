@@ -33,6 +33,7 @@ public:
 
 	[[nodiscard]] unsigned size() const noexcept;
 	[[nodiscard]] unsigned max_value() const noexcept;
+	[[nodiscard]] unsigned score() const noexcept;
 
 	void set_render_size(const sf::Vector2f& render_size);
 
@@ -76,6 +77,9 @@ private:
 	const unsigned size_;
 	std::vector<Tile> board_;
 	const unsigned max_value_;
+	// the merge/move functions should be in the mainscene not in the board itself<?>
+	// it'd be easier to maintain score in mainscene, but for now... let's put it int he board itself
+	unsigned score_{};
 
 	// TODO
 	float tile_padding_{ 10 };

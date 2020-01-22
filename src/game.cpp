@@ -4,7 +4,7 @@
 #include "scenemanager.h"
 
 Game::Game() :
-	window_{ std::make_unique<sf::RenderWindow>(sf::VideoMode(600, 600), "SFML works!") }
+	window_{ std::make_unique<sf::RenderWindow>(sf::VideoMode(600, 800), "SFML works!") }
 {
 	window_->setFramerateLimit(60);
 	

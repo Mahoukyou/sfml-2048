@@ -2,6 +2,7 @@
 
 #include "scene.h"
 #include "board.h"
+#include "SFML/Graphics.hpp"
 
 class MainScene : public IScene
 {
@@ -14,9 +15,15 @@ public:
 	void render(sf::RenderWindow& target) override;
 	
 private:
+	void init_score();
+	void update_score();
+	
 	bool finish_on_max_value_{ true };
 	const unsigned max_value_{ };
 	Board board_;
 
 	std::optional<Board::e_direction> pending_move{ std::nullopt };
+
+	sf::RectangleShape background_;
+	sf::Text score_;
 };

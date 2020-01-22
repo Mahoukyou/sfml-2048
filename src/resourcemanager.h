@@ -5,6 +5,7 @@
 #include <string>
 
 #include "SFML/Graphics/Texture.hpp"
+#include "SFML/Graphics/Font.hpp"
 
 class ResourceManager final
 {
@@ -22,10 +23,14 @@ public:
 	const sf::Texture* load_texture(const std::string& file, const std::string& id);
 	const sf::Texture* get_texture(const std::string& id);
 
+	const sf::Font* load_font(const std::string& file, const std::string& id);
+	const sf::Font* get_font(const std::string& id);
+
 private:
 	ResourceManager() = default;
 
 	// for now persistent unique ptr(don't even need a ptr though) is enough (small enough game so the resources can be allocated throughout)
 	// todo maybe later do some selfpurge once the resource is no longer used
-	std::map<std::string, std::unique_ptr<sf::Texture>> textures_;	
+	std::map<std::string, std::unique_ptr<sf::Texture>> textures_;
+	std::map<std::string, std::unique_ptr<sf::Font>> fonts_;
 };
