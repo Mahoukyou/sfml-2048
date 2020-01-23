@@ -35,7 +35,7 @@ bool SpriteButton::process_event(const sf::Event& event)
 	switch (event.type)
 	{
 	case sf::Event::MouseButtonPressed:		
-		if (state_ == e_state::hovered && is_mouse_in_area(get_mouse_pos()))
+		if (state_ == e_state::hovered && is_mouse_in_area())
 		{
 			state_ = e_state::pressed;
 			// todo, on pressed?
@@ -44,7 +44,7 @@ bool SpriteButton::process_event(const sf::Event& event)
 		return true;
 
 	case sf::Event::MouseButtonReleased:
-		if (state_ == e_state::pressed && is_mouse_in_area(get_mouse_pos()))
+		if (state_ == e_state::pressed && is_mouse_in_area())
 		{
 			state_ = e_state::hovered;
 			if (on_clicked)
@@ -61,7 +61,7 @@ bool SpriteButton::process_event(const sf::Event& event)
 
 	case sf::Event::MouseMoved:
 	{
-		const auto mouse_in_area = is_mouse_in_area(get_mouse_pos());
+		const auto mouse_in_area = is_mouse_in_area();
 		if (mouse_in_area && state_ == e_state::normal)
 		{
 			state_ = e_state::hovered;
@@ -110,7 +110,7 @@ void SpriteButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
-bool SpriteButton::is_mouse_in_area(const sf::Vector2i mouse_position) const noexcept
+bool SpriteButton::is_mouse_in_area() const
 {
 	sf::FloatRect rect{
 		0,
@@ -119,6 +119,8 @@ bool SpriteButton::is_mouse_in_area(const sf::Vector2i mouse_position) const noe
 		static_cast<float>(size_.y) };
 
 	rect = getTransform().transformRect(rect);
+
+	const auto mouse_position = get_mouse_pos();
 	return rect.contains({static_cast<float>(mouse_position.x), static_cast<float>(mouse_position.y)});
 }
 
