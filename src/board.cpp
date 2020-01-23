@@ -116,6 +116,15 @@ bool Board::contains_value(const unsigned value) const
 	return result != board_.end();
 }
 
+void Board::clear()
+{
+	for (auto& tile : board_)
+	{
+		tile = {};
+	}
+	score_ = 0;
+}
+
 void Board::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	states.transform *= getTransform();

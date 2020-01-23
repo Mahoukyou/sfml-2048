@@ -29,7 +29,7 @@ public:
 	};
 
 	Board(unsigned size, const sf::Vector2f& render_size, unsigned max_value);
-	~Board() = default;
+	~Board() override = default;
 
 	[[nodiscard]] unsigned size() const noexcept;
 	[[nodiscard]] unsigned max_value() const noexcept;
@@ -44,6 +44,8 @@ public:
 	[[nodiscard]] bool any_moves_available() const;
 
 	[[nodiscard]] bool contains_value(unsigned value) const;
+
+	void clear();
 	
 protected:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

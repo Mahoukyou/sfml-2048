@@ -18,6 +18,8 @@ public:
 private:
 	void init_score();
 	void update_score();
+
+	void restart();
 	
 	bool finish_on_max_value_{ true };
 	const unsigned max_value_{ };
@@ -28,6 +30,5 @@ private:
 	sf::RectangleShape background_;
 	sf::Text score_;
 
-	//test button
-	SpriteButton sb;
+	SpriteButton restart_button_;
 };

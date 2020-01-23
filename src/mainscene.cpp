@@ -7,11 +7,12 @@
 #include "SFML/Graphics.hpp"
 
 #include <iostream>
+#include <array>
 
 MainScene::MainScene() :
 	max_value_{ 2048 },
 	board_{ 4, {600, 600}, max_value_ },
-	sb{{100, 100}}
+	restart_button_{{50, 50}}
 {
 	// preload the textures atm so we won't have to deal with filenames in board
 	for(int i = 2; i <= 8192; i*=2)
@@ -36,15 +37,24 @@ MainScene::MainScene() :
 
 	init_score();
 
-	sb.setPosition(50, 100);
-	sb.set_texture(*ResourceManager::instance().get_texture("2"), SpriteButton::e_state::normal);
-	sb.set_texture(*ResourceManager::instance().get_texture("4"), SpriteButton::e_state::hovered);
-	sb.set_texture(*ResourceManager::instance().get_texture("8"), SpriteButton::e_state::pressed);
+	for (int i = 0; i < 3; ++i)
+	{
+		const std::array<std::string, 3> variations{ "normal", "hovered", "pressed" };
+		const std::string file = R"(K:\Development\SFML-2048\res\restart_icon_)" + variations[i] + ".png";
+		const auto result = ResourceManager::instance().load_texture(file, variations[i]);
 
+		if (!result)
+		{
+			throw std::runtime_error{ "Texture couldn't be loaded" };
+		}
+	}
+	
+	restart_button_.setPosition(540, 135);
+	restart_button_.set_texture(*ResourceManager::instance().get_texture("normal"), SpriteButton::e_state::normal);
+	restart_button_.set_texture(*ResourceManager::instance().get_texture("hovered"), SpriteButton::e_state::hovered);
+	restart_button_.set_texture(*ResourceManager::instance().get_texture("pressed"), SpriteButton::e_state::pressed);
 
-	sb.on_hovered = []() {std::cout << "HOVERED\n"; };
-	sb.on_unhovered = []() {std::cout << "unhovered\n"; };
-	sb.on_clicked = []() {std::cout << "clicked\n"; };
+	restart_button_.on_clicked = std::bind(&MainScene::restart, this);
 }
 
 void MainScene::process_event(const sf::Event& event)
@@ -70,7 +80,7 @@ void MainScene::process_event(const sf::Event& event)
 		}
 	}
 
-	sb.process_event(event);
+	restart_button_.process_event(event);
 }
 
 void MainScene::update(const float /*delta_time*/)
@@ -104,7 +114,7 @@ void MainScene::render(sf::RenderWindow& target)
 	target.clear();
 	target.draw(background_);
 	target.draw(score_);
-	target.draw(sb);
+	target.draw(restart_button_);
 	target.draw(board_);
 	target.display();
 }
@@ -129,4 +139,14 @@ void MainScene::init_score()
 void MainScene::update_score()
 {
 	score_.setString("Score: " + std::to_string(board_.score()));
+}
+
+void MainScene::restart()
+{
+	pending_move = std::nullopt;
+	board_.clear();
+	board_.spawn_new_tile();
+	board_.spawn_new_tile();
+
+	update_score();
 }
